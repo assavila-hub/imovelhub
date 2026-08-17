@@ -1,0 +1,399 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --font-primary: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Color Tokens */
+  --color-primary: #1e3a8a;       /* Deep ZAP Blue */
+  --color-primary-light: #3b82f6; /* QuintoAndar Blue */
+  --color-accent: #ff4757;        /* Viva Real Coral/Red */
+  --color-olx: #8e44ad;           /* OLX Purple Accent */
+  --color-loft: #6366f1;          /* Loft Indigo */
+  --color-quinto: #059669;        /* QuintoAndar Green */
+  
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-light: #94a3b8;
+  
+  --border-color: #e2e8f0;
+  --border-focus: #3b82f6;
+  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.14);
+  
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+  
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark-mode {
+  --bg-main: #0b0f19;
+  --bg-card: #151c2c;
+  --bg-glass: rgba(21, 28, 44, 0.88);
+  
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-light: #64748b;
+  
+  --border-color: #27354a;
+  
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+}
+
+/* Layout Utilities */
+.container {
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 2.5vw, 2.5rem);
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-quinto {
+  background: rgba(5, 150, 105, 0.12);
+  color: var(--color-quinto);
+  border: 1px solid rgba(5, 150, 105, 0.3);
+}
+
+.badge-loft {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--color-loft);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.badge-viva {
+  background: rgba(255, 71, 87, 0.12);
+  color: var(--color-accent);
+  border: 1px solid rgba(255, 71, 87, 0.3);
+}
+
+.badge-olx {
+  background: rgba(142, 68, 173, 0.12);
+  color: var(--color-olx);
+  border: 1px solid rgba(142, 68, 173, 0.3);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-primary-light), var(--color-primary));
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, #ff6b81, var(--color-accent));
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 71, 87, 0.35);
+}
+.btn-accent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 71, 87, 0.5);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+.btn-outline:hover {
+  background: var(--bg-main);
+  border-color: var(--text-muted);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+.btn-ghost:hover {
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.btn-sm {
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.5rem, 2vw, 1.5rem);
+  animation: fadeIn 0.25s ease-out;
+}
+
+.modal-content {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  max-width: 1320px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Form controls */
+input, select, textarea {
+  font-family: var(--font-primary);
+  font-size: 0.95rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.category-tree-parent-hover:hover {
+  background-color: rgba(255, 90, 0, 0.08);
+}
+
+.category-tree-child-hover:hover {
+  background-color: rgba(255, 90, 0, 0.05);
+}
+
+.hover-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-primary-light) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* ==========================================================================
+   COMPREHENSIVE RESPONSIVE DESIGN & ADAPTIVE BREAKPOINTS
+   (Mobile, Tablets, Laptops, Desktops, 4K & Ultrawide)
+   ========================================================================== */
+
+/* 1. Modals & Overlays */
+@media (max-width: 1024px) {
+  .modal-content {
+    max-width: 96% !important;
+    max-height: 94vh !important;
+  }
+}
+
+/* 2. Hide/Show Utilities */
+.desktop-only {
+  display: flex !important;
+}
+.mobile-only {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .desktop-only {
+    display: none !important;
+  }
+  .mobile-only {
+    display: flex !important;
+  }
+}
+
+/* 3. Flex and Grid Utilities for Mobile & Tablet */
+@media (max-width: 900px) {
+  .flex-column-mobile {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  
+  .flex-wrap-mobile {
+    flex-wrap: wrap !important;
+  }
+
+  .gap-mobile-sm {
+    gap: 0.5rem !important;
+  }
+  
+  .text-mobile-sm {
+    font-size: 0.85rem !important;
+  }
+  
+  .text-mobile-center {
+    text-align: center !important;
+  }
+}
+
+/* 4. Table Responsiveness */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-responsive table {
+  min-width: 650px;
+}
+
+/* 5. Responsive Grid for Properties */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 1.75rem;
+}
+
+/* High Resolution / 4K / Ultrawide Monitors */
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1840px;
+    padding: 0 3rem;
+  }
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 2rem;
+  }
+}
+
+/* Notebooks & Standard Desktops (1200px - 1600px) */
+@media (max-width: 1440px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+/* Low-res Notebooks & Tablet Landscape (992px - 1200px) */
+@media (max-width: 1200px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+/* Tablets (640px - 991px) */
+@media (max-width: 900px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+  }
+}
+
+/* Small Mobiles (< 480px) */
+@media (max-width: 480px) {
+  .container {
+    padding: 0 0.85rem;
+  }
+  .responsive-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* 6. Header Banner scrolling */
+.header-top-banner {
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+.header-top-banner::-webkit-scrollbar {
+  display: none;
+}

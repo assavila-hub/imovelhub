@@ -1,0 +1,699 @@
+import React, { useState } from 'react';
+import { 
+  X, 
+  PlusCircle, 
+  CheckCircle, 
+  Upload, 
+  Home, 
+  MapPin, 
+  DollarSign, 
+  Image as ImageIcon, 
+  Search, 
+  Loader2,
+  Video,
+  Trash2,
+  Sparkles,
+  ExternalLink,
+  Plus
+} from 'lucide-react';
+import { fetchAddressByCep } from '../services/api';
+
+export default function PostPropertyModal({
+  onClose,
+  onAddProperty
+}) {
+  const [step, setStep] = useState(1);
+  const [loadingCep, setLoadingCep] = useState(false);
+  const [cep, setCep] = useState('');
+  
+  // Images list (multiple images)
+  const [imagesList, setImagesList] = useState([
+    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'
+  ]);
+  const [customImageUrl, setCustomImageUrl] = useState('');
+
+  const [formData, setFormData] = useState({
+    title: '',
+    type: 'Apartamento',
+    subType: 'Padrão',
+    transactionType: 'Venda',
+    price: '',
+    rentPrice: '',
+    condoFee: '',
+    iptu: '',
+    area: '',
+    bedrooms: '2',
+    suites: '1',
+    bathrooms: '2',
+    parkingSpots: '1',
+    city: 'São Paulo',
+    state: 'SP',
+    neighborhood: 'Pinheiros',
+    address: '',
+    description: '',
+    youtubeUrl: '',
+    advertiserName: '',
+    advertiserPhone: ''
+  });
+
+  const handleSearchCep = async (cepInput) => {
+    setCep(cepInput);
+    const clean = cepInput.replace(/\D/g, '');
+    if (clean.length === 8) {
+      setLoadingCep(true);
+      const data = await fetchAddressByCep(clean);
+      setLoadingCep(false);
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          city: data.city || prev.city,
+          state: data.state || prev.state,
+          neighborhood: data.neighborhood || prev.neighborhood,
+          address: data.address ? `${data.address}, ${data.neighborhood}` : prev.address
+        }));
+      }
+    }
+  };
+
+  // Image File Upload Handler (Base64)
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          setImagesList(prev => [...prev, reader.result]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAddImageUrl = () => {
+    if (!customImageUrl.trim()) return;
+    setImagesList(prev => [...prev, customImageUrl.trim()]);
+    setCustomImageUrl('');
+  };
+
+  const handleRemoveImage = (index) => {
+    if (imagesList.length <= 1) {
+      alert('O imóvel precisa ter pelo menos 1 imagem.');
+      return;
+    }
+    setImagesList(prev => prev.filter((_, idx) => idx !== index));
+  };
+
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const newProp = {
+      id: `prop-custom-${Date.now()}`,
+      title: formData.title || 'Imóvel Anunciado no ImóvelHUB',
+      type: formData.type || 'Apartamento',
+      subType: formData.subType || 'Padrão',
+      transactionType: formData.transactionType,
+      price: formData.transactionType === 'Venda' ? Number(formData.price || 500000) : null,
+      rentPrice: formData.transactionType === 'Aluguel' ? Number(formData.rentPrice || 2500) : null,
+      condoFee: Number(formData.condoFee || 500),
+      iptu: Number(formData.iptu || 150),
+      area: Number(formData.area || 65),
+      bedrooms: formData.type === 'Terreno' || formData.type === 'Comercial' ? null : (formData.bedrooms ? Number(formData.bedrooms) : null),
+      suites: formData.type === 'Terreno' || formData.type === 'Comercial' ? null : (formData.suites ? Number(formData.suites) : null),
+      bathrooms: formData.type === 'Terreno' ? null : (formData.bathrooms ? Number(formData.bathrooms) : null),
+      parkingSpots: formData.type === 'Terreno' ? null : (formData.parkingSpots ? Number(formData.parkingSpots) : null),
+      city: formData.city,
+      state: formData.state,
+      neighborhood: formData.neighborhood,
+      address: formData.address || `${formData.neighborhood}, ${formData.city}`,
+      lat: -23.567 + (Math.random() - 0.5) * 0.1,
+      lng: -46.662 + (Math.random() - 0.5) * 0.1,
+      isVerifiedHub: true,
+      isVerifiedQuintoAndar: true,
+      isLaunch: false,
+      priceReduced: false,
+      oldPrice: null,
+      youtubeUrl: formData.youtubeUrl || null,
+      loftValuation: {
+        status: "Novo Anúncio",
+        diffPercent: -2.0,
+        neighborhoodAvgPerM2: 10000
+      },
+      description: formData.description || 'Excelente imóvel recém anunciado. Entre em contato para agendar uma visita.',
+      amenities: ["Varanda", "Portaria 24h", "Armários Planejados", "Pet Friendly"],
+      images: imagesList.length > 0 ? imagesList : [
+        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1200&q=80"
+      ],
+      advertiser: {
+        name: formData.advertiserName || 'Proprietário Direto',
+        type: 'Proprietário',
+        creci: null,
+        phone: formData.advertiserPhone || '(11) 99999-8888',
+        whatsapp: '5511999998888',
+        avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80'
+      },
+      publishedAt: new Date().toISOString().split('T')[0]
+    };
+
+    setIsSuccess(true);
+    setTimeout(() => {
+      onAddProperty(newProp);
+      setIsSuccess(false);
+      onClose();
+    }, 1800);
+  };
+
+  return (
+    <div className="modal-overlay" style={{ zIndex: 1300 }} onClick={onClose}>
+      <div className="modal-content" style={{ maxWidth: '720px', padding: 0 }} onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '1.25rem 1.5rem',
+          borderBottom: '1px solid var(--border-color)',
+          backgroundColor: 'var(--bg-main)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div style={{ padding: '0.4rem', borderRadius: '8px', backgroundColor: 'var(--color-primary)', color: '#fff' }}>
+              <PlusCircle size={20} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 800 }}>Cadastrar Novo Imóvel no ImóvelHUB</h2>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Cadastre seu anúncio completo com fotos em alta definição e vídeo do YouTube</span>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ border: 'none', background: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+            <X size={22} />
+          </button>
+        </div>
+
+        {/* Content Body */}
+        <div style={{ padding: '1.5rem', maxHeight: 'calc(88vh - 80px)', overflowY: 'auto' }}>
+          {isSuccess ? (
+            <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(5, 150, 105, 0.15)',
+                color: 'var(--color-primary-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1.25rem auto'
+              }}>
+                <CheckCircle size={36} />
+              </div>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.5rem' }}>Anúncio Publicado com Sucesso!</h3>
+              <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>
+                Seu imóvel já está ativo nos resultados de busca com selo verificado do ImóvelHUB.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              {/* Step indicator */}
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                <div style={{ flex: 1, height: '4px', borderRadius: '2px', backgroundColor: step >= 1 ? 'var(--color-primary)' : 'var(--border-color)' }} />
+                <div style={{ flex: 1, height: '4px', borderRadius: '2px', backgroundColor: step >= 2 ? 'var(--color-primary)' : 'var(--border-color)' }} />
+              </div>
+
+              {step === 1 && (
+                <div>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '1rem' }}>Etapa 1: Tipo e Valor do Imóvel</h3>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Finalidade</label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      {['Venda', 'Aluguel'].map(t => (
+                        <button
+                          type="button"
+                          key={t}
+                          onClick={() => setFormData({ ...formData, transactionType: t })}
+                          style={{
+                            flex: 1,
+                            padding: '0.6rem',
+                            borderRadius: 'var(--radius-sm)',
+                            border: formData.transactionType === t ? '2px solid var(--color-primary)' : '1px solid var(--border-color)',
+                            backgroundColor: formData.transactionType === t ? 'var(--color-primary)' : 'var(--bg-card)',
+                            color: formData.transactionType === t ? '#ffffff' : 'var(--text-main)',
+                            fontWeight: 700,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '1rem' }}>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Título do Anúncio</label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Lindo Apartamento em Moema com 2 suítes e varanda"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      required
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Tipo de Imóvel</label>
+                      <select
+                        value={formData.type}
+                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                        style={{ width: '100%' }}
+                      >
+                        <option value="Apartamento">Apartamento</option>
+                        <option value="Casa">Casa</option>
+                        <option value="Cobertura">Cobertura</option>
+                        <option value="Studio">Studio / Kitnet</option>
+                        <option value="Terreno">Terreno</option>
+                        <option value="Comercial">Comercial</option>
+                        <option value="Rural">Rural</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>
+                        {formData.transactionType === 'Venda' ? 'Valor de Venda (R$)' : 'Valor de Aluguel (R$)'}
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 750000"
+                        value={formData.transactionType === 'Venda' ? formData.price : formData.rentPrice}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          [formData.transactionType === 'Venda' ? 'price' : 'rentPrice']: e.target.value
+                        })}
+                        required
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Condomínio (R$ / mês)</label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 650"
+                        value={formData.condoFee}
+                        onChange={(e) => setFormData({ ...formData, condoFee: e.target.value })}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>IPTU (R$ / ano)</label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 180"
+                        value={formData.iptu}
+                        onChange={(e) => setFormData({ ...formData, iptu: e.target.value })}
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => {
+                      if (!formData.title || (!formData.price && !formData.rentPrice)) {
+                        alert("Por favor, preencha o título e o valor do imóvel.");
+                        return;
+                      }
+                      setStep(2);
+                    }}
+                    style={{ width: '100%', fontWeight: 800 }}
+                  >
+                    Continuar para Mídias &amp; Localização ➔
+                  </button>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 800 }}>Etapa 2: Mídias, Localização &amp; Detalhes</h3>
+
+                  {/* SEÇÃO DE MÍDIA: IMAGENS & VÍDEO DO YOUTUBE */}
+                  <div style={{ backgroundColor: 'var(--bg-main)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.75rem' }}>
+                      <ImageIcon size={18} color="var(--color-primary-light)" />
+                      <strong style={{ fontSize: '0.9rem' }}>Fotos e Mídia do Imóvel ({imagesList.length} adicionadas)</strong>
+                    </div>
+
+                    {/* File Upload Button + URL Input */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <label 
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem',
+                            padding: '0.55rem 1rem',
+                            backgroundColor: 'var(--color-primary)',
+                            color: '#ffffff',
+                            borderRadius: 'var(--radius-sm)',
+                            cursor: 'pointer',
+                            fontSize: '0.82rem',
+                            fontWeight: 700
+                          }}
+                        >
+                          <Upload size={15} />
+                          <span>Fazer Upload de Fotos</span>
+                          <input 
+                            type="file" 
+                            multiple 
+                            accept="image/*" 
+                            onChange={handleFileUpload} 
+                            style={{ display: 'none' }} 
+                          />
+                        </label>
+                      </div>
+
+                      {/* Add Image by URL */}
+                      <div style={{ display: 'flex', gap: '0.4rem' }}>
+                        <input
+                          type="url"
+                          placeholder="Ou cole o link direto da imagem (URL https://...)"
+                          value={customImageUrl}
+                          onChange={(e) => setCustomImageUrl(e.target.value)}
+                          style={{ flex: 1, fontSize: '0.8rem', padding: '0.45rem 0.6rem' }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={handleAddImageUrl}
+                          style={{ fontSize: '0.78rem', whiteSpace: 'nowrap' }}
+                        >
+                          + Adicionar URL
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Preview Gallery Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '0.65rem' }}>
+                      {imagesList.map((img, idx) => (
+                        <div key={idx} style={{ position: 'relative', height: '75px', borderRadius: '6px', overflow: 'hidden', border: idx === 0 ? '2px solid var(--color-primary)' : '1px solid var(--border-color)' }}>
+                          <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          {idx === 0 && (
+                            <span style={{ position: 'absolute', bottom: 2, left: 2, backgroundColor: 'rgba(30, 58, 138, 0.9)', color: '#fff', fontSize: '0.6rem', padding: '1px 4px', borderRadius: '3px', fontWeight: 800 }}>
+                              Capa
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(idx)}
+                            style={{
+                              position: 'absolute',
+                              top: 2,
+                              right: 2,
+                              background: 'rgba(239, 68, 68, 0.85)',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '20px',
+                              height: '20px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              padding: 0
+                            }}
+                            title="Remover Foto"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* YOUTUBE VIDEO LINK */}
+                    <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-color)' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.35rem' }}>
+                        <Video size={16} color="#ef4444" />
+                        <span>Link do Vídeo do YouTube (Tour Virtual / Apresentação)</span>
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="Ex: https://www.youtube.com/watch?v=dQw4w9WgXcQ ou https://youtu.be/..."
+                        value={formData.youtubeUrl}
+                        onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                        style={{ width: '100%', fontSize: '0.82rem', padding: '0.5rem' }}
+                      />
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
+                        O vídeo será incorporado diretamente na página de detalhes do imóvel.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* CEP & Localização */}
+                  <div>
+                    <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>
+                      CEP do Imóvel (Auto-completar)
+                    </label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <input
+                        type="text"
+                        placeholder="00000-000"
+                        value={cep}
+                        onChange={(e) => handleSearchCep(e.target.value)}
+                        maxLength={9}
+                        style={{ flex: 1 }}
+                      />
+                      {loadingCep && (
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '0 0.5rem' }}>
+                          <Loader2 size={20} className="animate-spin" color="var(--color-primary)" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Dimensões Adaptativas baseadas no Tipo de Imóvel */}
+                  {formData.type === 'Terreno' ? (
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Área do Terreno / Lote (m²)</label>
+                      <input
+                        type="number"
+                        placeholder="Ex: 500"
+                        value={formData.area}
+                        onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                        required
+                        style={{ width: '100%' }}
+                      />
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.2rem' }}>
+                        * Terrenos não exigem quartos, banheiros ou vagas residenciais.
+                      </span>
+                    </div>
+                  ) : formData.type === 'Comercial' ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Área Total (m²)</label>
+                        <input
+                          type="number"
+                          placeholder="80"
+                          value={formData.area}
+                          onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                          required
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Banheiros / Lavabos</label>
+                        <input
+                          type="number"
+                          placeholder="1"
+                          value={formData.bathrooms}
+                          onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Vagas de Garagem</label>
+                        <input
+                          type="number"
+                          placeholder="2"
+                          value={formData.parkingSpots}
+                          onChange={(e) => setFormData({ ...formData, parkingSpots: e.target.value })}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Área (m²)</label>
+                        <input
+                          type="number"
+                          placeholder="65"
+                          value={formData.area}
+                          onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                          required
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Quartos</label>
+                        <input
+                          type="number"
+                          placeholder="2"
+                          value={formData.bedrooms}
+                          onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Banheiros</label>
+                        <input
+                          type="number"
+                          placeholder="2"
+                          value={formData.bathrooms}
+                          onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Vagas</label>
+                        <input
+                          type="number"
+                          placeholder="1"
+                          value={formData.parkingSpots}
+                          onChange={(e) => setFormData({ ...formData, parkingSpots: e.target.value })}
+                          style={{ width: '100%' }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Cidade</label>
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        required
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Bairro</label>
+                      <input
+                        type="text"
+                        value={formData.neighborhood}
+                        onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
+                        required
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700 }}>Descrição Detalhada do Imóvel</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const t = formData.type || 'Imóvel';
+                          const sub = formData.subType ? `(${formData.subType})` : '';
+                          const trans = formData.transactionType === 'Aluguel' ? 'locação' : 'venda';
+                          const neighborhood = formData.neighborhood || 'bairro nobre';
+                          const city = formData.city || 'São Paulo';
+                          const area = formData.area ? `${formData.area}m² de área privativa` : 'excelente metragem';
+                          const bedrooms = Number(formData.bedrooms) > 0 ? `${formData.bedrooms} dormitório(s)` : '';
+                          const suites = Number(formData.suites) > 0 ? `sendo ${formData.suites} suíte(s)` : '';
+                          const parking = Number(formData.parkingSpots) > 0 ? `${formData.parkingSpots} vaga(s) de garagem` : '';
+                          const price = formData.transactionType === 'Aluguel' ? `R$ ${Number(formData.rentPrice || 0).toLocaleString('pt-BR')}/mês` : `R$ ${Number(formData.price || 0).toLocaleString('pt-BR')}`;
+
+                          const generated = `🌟 Oportunidade Exclusiva para ${trans.toUpperCase()}: ${t} ${sub} em ${neighborhood}, ${city}!\n\n` +
+                            `Apresentamos este magnífico imóvel com ${area}${bedrooms ? `, ${bedrooms}` : ''}${suites ? `, ${suites}` : ''}${parking ? ` e ${parking}` : ''}.\n\n` +
+                            `✨ Diferenciais & Conforto:\n` +
+                            `• Planta inteligente com excelente aproveitamento de espaços e ótima iluminação natural;\n` +
+                            `• Localização privilegiada em ${neighborhood}, próximo a serviços essenciais, transporte e lazer;\n` +
+                            `• Condição especial de mercado cotado a ${price}.\n\n` +
+                            `📅 Agende sua visita online pelo ImóvelHUB e garanta esta oportunidade!`;
+
+                          setFormData(prev => ({ ...prev, description: generated }));
+                        }}
+                        style={{
+                          backgroundColor: 'rgba(56, 189, 248, 0.15)',
+                          color: '#0284c7',
+                          border: '1px solid rgba(56, 189, 248, 0.3)',
+                          borderRadius: '4px',
+                          padding: '0.2rem 0.5rem',
+                          fontSize: '0.72rem',
+                          fontWeight: 800,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ✨ Gerar Descrição com IA
+                      </button>
+                    </div>
+                    <textarea
+                      rows={4}
+                      placeholder="Descreva os diferenciais, comodidades e proximidades..."
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Seu Nome / Imobiliária</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: Carlos Silva"
+                        value={formData.advertiserName}
+                        onChange={(e) => setFormData({ ...formData, advertiserName: e.target.value })}
+                        required
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.8rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Telefone / WhatsApp</label>
+                      <input
+                        type="tel"
+                        placeholder="(11) 98888-7777"
+                        value={formData.advertiserPhone}
+                        onChange={(e) => setFormData({ ...formData, advertiserPhone: e.target.value })}
+                        required
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                    <button
+                      type="button"
+                      className="btn btn-outline"
+                      onClick={() => setStep(1)}
+                      style={{ flex: 1 }}
+                    >
+                      Voltar
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      style={{ flex: 2, fontWeight: 800 }}
+                    >
+                      Publicar Imóvel com Fotos &amp; Vídeo
+                    </button>
+                  </div>
+                </div>
+              )}
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
